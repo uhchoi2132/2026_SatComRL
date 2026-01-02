@@ -1,0 +1,11 @@
+services:
+  satcomrl:
+    build: .
+    image: satcomrl:latest
+    container_name: satcomrl
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    ports:
+      - "8000:8000"
+    command: bash

@@ -1,0 +1,14 @@
+seed: 0
+
+routing:
+  episodes: 20000
+  alpha: 0.05
+  gamma: 0.9
+  epsilon: 0.3
+  epsilon_decay: 0.9999
+
+resource:
+  num_sats: 4
+  num_slots: 40
+  stop_iters: 20
+  num_workers: 2

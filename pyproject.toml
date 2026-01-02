@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "satcomrl"
+version = "0.1.0"
+description = "Web/Cloud-ready SatCom+EO RL research template (Gymnasium + Ray RLlib)"
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "SatComRL Template"}]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["satcomrl*"]
