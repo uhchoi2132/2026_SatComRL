@@ -78,6 +78,21 @@ tensorboard --logdir outputs --host 0.0.0.0 --port 6006
 ```
 TensorBoard will pick up logs under `outputs/*/logs/<run-name>`.
 
+### Quick Dashboard (Plotly Dash)
+A minimal dashboard is provided that reads `outputs/qrouting` artifacts (Q.npy, results.json) and renders a Q heatmap and summary.
+
+Run it with:
+```bash
+python -m satcomrl.visualize.dashboard --outputs outputs/qrouting --port 8050
+```
+
+### W&B demo (offline)
+A simple demo script to run a short PPO training with W&B in offline mode is included at `scripts/run_wandb_demo.sh`.
+Run it with:
+```bash
+bash scripts/run_wandb_demo.sh
+```
+
 ---
 
 ## Serving a Trained Policy (Ray Serve)
