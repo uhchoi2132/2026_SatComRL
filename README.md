@@ -66,6 +66,18 @@ export SATCOMRL_USE_WANDB=1
 ```
 Training scripts will log metrics automatically.
 
+### TensorBoard (local, real-time)
+The training entrypoints now support TensorBoard logging by default. Use the following flags:
+```bash
+python -m satcomrl.train.train_ppo --use-tensorboard 1 --run-name my_run
+python -m satcomrl.train.train_qrouting --use-tensorboard 1 --run-name my_run
+```
+Start TensorBoard to visualize runs:
+```bash
+tensorboard --logdir outputs --host 0.0.0.0 --port 6006
+```
+TensorBoard will pick up logs under `outputs/*/logs/<run-name>`.
+
 ---
 
 ## Serving a Trained Policy (Ray Serve)

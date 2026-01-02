@@ -35,6 +35,8 @@ def main():
     ap.add_argument("--epsilon", type=float, default=0.3)
     ap.add_argument("--epsilon-decay", type=float, default=0.9999)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--use-tensorboard", type=int, default=1)
+    ap.add_argument("--run-name", type=str, default=None)
     ap.add_argument("--outdir", type=str, default="outputs/qrouting")
     args = ap.parse_args()
 
@@ -46,7 +48,11 @@ def main():
         epsilon=args.epsilon, epsilon_decay=args.epsilon_decay
     )
 
-    Q = train_qrouting(env, params)
+    # optional logging
+    from satcomrl.visualize import TrainerLogger
+    logger = TrainerLogger(logdir=(args.outdir + "/logs"), run_name=(args.run_name or f"qr_seed{args.seed}"), use_wandb=False, config=vars(args)) if args.use_tensorboard else None
+
+    Q = train_qrouting(env, params, logger=logger)
     q_route = greedy_route_from_Q(env, Q)
     dj_route = dijkstra_route(env)
     djmq_route = dijkstra_mq_route(env, mean_queue_ms=(cfg.lmin_ms + cfg.lmax_ms)/2.0)
@@ -63,6 +69,9 @@ def main():
     save_json(out / "results.json", results)
     print("Saved:", out / "results.json")
     print(results["qrouting"]["eval"], results["dijkstra"]["eval"], results["dijkstra_mq"]["eval"])
+
+    if logger:
+        logger.close()
 
 if __name__ == "__main__":
     main()

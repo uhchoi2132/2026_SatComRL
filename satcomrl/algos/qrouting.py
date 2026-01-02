@@ -12,7 +12,7 @@ class QRoutingParams:
     epsilon: float = 0.3
     epsilon_decay: float = 0.9999
 
-def train_qrouting(env: SatelliteNetworkEnv, params: QRoutingParams) -> np.ndarray:
+def train_qrouting(env: SatelliteNetworkEnv, params: QRoutingParams, logger=None) -> np.ndarray:
     n = env.cfg.n_nodes
     Q = np.zeros((n, n), dtype=np.float32)
     eps = params.epsilon
@@ -21,6 +21,8 @@ def train_qrouting(env: SatelliteNetworkEnv, params: QRoutingParams) -> np.ndarr
         state, _ = env.reset()
         visited = set()
         done = False
+        ep_reward = 0.0
+        ep_len = 0
         while not done:
             visited.add(state)
             valid = env.get_valid_actions(state)
@@ -42,11 +44,17 @@ def train_qrouting(env: SatelliteNetworkEnv, params: QRoutingParams) -> np.ndarr
             max_next = np.max([Q[new_state, a] for a in next_valid]) if next_valid else 0.0
             Q[state, action] = (1 - params.alpha) * Q[state, action] + params.alpha * (reward + params.gamma * max_next)
 
+            ep_reward += reward
+            ep_len += 1
+
             state = new_state
             if trunc:
                 break
 
         eps *= params.epsilon_decay
+
+        if logger and (ep % 100 == 0 or ep == params.episodes - 1):
+            logger.log_scalars({"qrouting/episode_reward": float(ep_reward), "qrouting/episode_len": int(ep_len)}, step=ep)
 
     return Q
 

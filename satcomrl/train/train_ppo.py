@@ -23,10 +23,16 @@ def main():
     ap.add_argument("--stop-iters", type=int, default=20)
     ap.add_argument("--num-workers", type=int, default=2)
     ap.add_argument("--use-wandb", type=int, default=int(os.getenv("SATCOMRL_USE_WANDB", "0")))
+    ap.add_argument("--use-tensorboard", type=int, default=1)
+    ap.add_argument("--run-name", type=str, default=None)
     ap.add_argument("--outdir", type=str, default="outputs/ppo_resource")
     args = ap.parse_args()
 
     seed_everything(args.seed)
+
+    # optional logging
+    from satcomrl.visualize import TrainerLogger
+    logger = TrainerLogger(logdir=(args.outdir + "/logs"), run_name=(args.run_name or f"ppo_seed{args.seed}"), use_wandb=bool(args.use_wandb), config=vars(args)) if args.use_tensorboard or args.use_wandb else None
 
     register_env("satcom_resource", env_creator)
 
@@ -69,17 +75,23 @@ def main():
 
     for i in range(args.stop_iters):
         res = algo.train()
-        metrics_log.append({
+        metrics = {
             "iter": i,
             "episode_reward_mean": res.get("episode_reward_mean"),
             "episode_len_mean": res.get("episode_len_mean"),
             "timesteps_total": res.get("timesteps_total"),
-        })
-        reward = res.get("episode_reward_mean")
-        len_mean = res.get("episode_len_mean")
+        }
+        metrics_log.append(metrics)
+        reward = metrics["episode_reward_mean"]
+        len_mean = metrics["episode_len_mean"]
         r_str = f"{reward:.3f}" if reward is not None else "None"
         l_str = f"{len_mean:.2f}" if len_mean is not None else "None"
         print(f"[iter {i}] reward_mean={r_str} len_mean={l_str}")
+
+        # log to TensorBoard / wandb if enabled
+        if logger:
+            to_log = {k: v for k, v in metrics.items() if k != "iter" and v is not None}
+            logger.log_scalars(to_log, step=i)
 
         if (i + 1) % 5 == 0:
             checkpoint_path = algo.save(out.as_posix())
@@ -88,6 +100,9 @@ def main():
 
     save_json(out / "metrics.json", {"config": vars(args), "env_conf": env_conf, "metrics": metrics_log})
     print("Saved:", out / "metrics.json")
+
+    if logger:
+        logger.close()
 
     ray.shutdown()
 
